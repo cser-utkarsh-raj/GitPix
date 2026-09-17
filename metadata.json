@@ -1,0 +1,6 @@
+{
+  "name": "GitPix",
+  "description": "GitPix - Futuristic Samurai AI GitHub Profile Generator & Direct Repository Deployment Engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
