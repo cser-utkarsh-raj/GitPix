@@ -12,10 +12,18 @@ app = FastAPI(title="GitPix API", version="2.1.0", docs_url=None, redoc_url=None
 _cache = {}
 _hits = defaultdict(list)
 USERNAME_RE = re.compile(r"^[A-Za-z0-9-]{1,39}$")
-AI_API_KEY = os.getenv("AI_API_KEY", "").strip()
-AI_PROVIDER = os.getenv("AI_PROVIDER", "openai-compatible").lower()
-AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-AI_MODEL = os.getenv("AI_MODEL", "gpt-4o-mini")
+
+# AI provider configuration. NVIDIA_API_KEY is supported directly because NVIDIA's
+# hosted NIM endpoints use the OpenAI-compatible chat-completions interface.
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "").strip()
+AI_API_KEY = os.getenv("AI_API_KEY", "").strip() or NVIDIA_API_KEY
+AI_PROVIDER = os.getenv("AI_PROVIDER", "").strip().lower() or ("nvidia" if NVIDIA_API_KEY else "openai-compatible")
+AI_BASE_URL = os.getenv("AI_BASE_URL", "").strip().rstrip("/") or (
+    "https://integrate.api.nvidia.com/v1" if AI_PROVIDER == "nvidia" else "https://api.openai.com/v1"
+)
+AI_MODEL = os.getenv("AI_MODEL", "").strip() or (
+    "openai/gpt-oss-20b" if AI_PROVIDER == "nvidia" else "gpt-4o-mini"
+)
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "").strip()
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "").strip()
 
@@ -135,7 +143,7 @@ def clean_ai_markdown(text: str) -> str:
 @app.post("/api/ai/generate")
 async def ai_generate(payload: AIGenerateRequest, request: Request):
     rate_limit(request, "ai", 12)
-    if not AI_API_KEY: raise HTTPException(503, "AI generation is not configured. Add AI_API_KEY to the Vercel environment variables.")
+    if not AI_API_KEY: raise HTTPException(503, "AI generation is not configured. Add AI_API_KEY or NVIDIA_API_KEY to the Vercel environment variables.")
     system = "You are GitPix, a meticulous GitHub Profile README designer. Generate ONLY the final Markdown README, never a preamble, never a code fence, and never invent facts. Use the supplied public GitHub data as the source of truth. Preserve the requested visual style through headings, HTML alignment, badges, tables, spacing, and tasteful image services. Never include secrets or private data."
     prompt = f"Create a polished GitHub profile README in the {payload.template} visual system.\n\nGitHub data:\n{payload.profile}\n\nAdditional user instructions:\n{payload.instructions or 'Use your judgment, but keep it concise and distinctive.'}"
     try:
