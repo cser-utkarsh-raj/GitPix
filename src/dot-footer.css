@@ -1,5 +1,5 @@
 /* Canonical .dot footer treatment — shared product-family branding. */
-.footer.footer-dot-canonical {
+.footer {
   display: grid !important;
   grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
@@ -9,125 +9,23 @@
   border-top: 1px solid rgba(255,255,255,.08) !important;
   background: transparent !important;
 }
-
-.footer.footer-dot-canonical .footer-brand-block {
-  min-width: 0;
-  text-align: left;
-}
-
-.footer.footer-dot-canonical .footer-brand {
-  opacity: 1 !important;
-}
-
-.footer.footer-dot-canonical .footer-brand img {
-  width: 112px !important;
-}
-
-.footer.footer-dot-canonical .footer-brand-block p {
-  margin: 9px 0 0 !important;
-  color: #66736c !important;
-  font-size: 10px !important;
-  line-height: 1.65 !important;
-}
-
-.footer.footer-dot-canonical .dot-footer {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 7px !important;
-  min-height: 28px !important;
-  opacity: .68 !important;
-  transition: opacity .2s ease, transform .2s ease !important;
-}
-
-.footer.footer-dot-canonical .dot-footer:hover {
-  opacity: 1 !important;
-  transform: translateY(-1px) !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > span {
-  color: #7e8e86 !important;
-  font: 700 10px/1 'Manrope', system-ui, sans-serif !important;
-  letter-spacing: .16em !important;
-  text-transform: uppercase !important;
-  white-space: nowrap !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > a {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  color: #f4f1ed !important;
-  transition: color .2s ease !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > a:hover {
-  color: #fff !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > a::before {
-  content: "" !important;
-  display: block !important;
-  width: 18px !important;
-  height: 20px !important;
-  flex: 0 0 18px !important;
-  background: url('/dot-logo.svg') center / contain no-repeat !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > a > strong {
-  display: inline-block !important;
-  color: #f4f1ed !important;
-  font-family: 'Space Grotesk', system-ui, sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 800 !important;
-  letter-spacing: -.055em !important;
-  line-height: 1 !important;
-}
-
-.footer.footer-dot-canonical .dot-footer > a > strong b {
-  color: #20B2AA !important;
-  font-weight: 800 !important;
-}
-
-.footer.footer-dot-canonical .footer-links {
-  display: flex !important;
-  justify-content: flex-end !important;
-  align-items: center !important;
-  gap: 20px !important;
-  color: #65736c !important;
-  font: 9px/1 'DM Mono', monospace !important;
-  text-transform: uppercase !important;
-  letter-spacing: .1em !important;
-}
-
-.footer.footer-dot-canonical .footer-links a {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  transition: color .2s ease, transform .2s ease !important;
-}
-
-.footer.footer-dot-canonical .footer-links a:hover {
-  color: #f4f1ed !important;
-  transform: translateY(-1px) !important;
-}
-
+.footer .footer-brand-block { min-width: 0; text-align: left; }
+.footer .footer-brand { opacity: 1 !important; }
+.footer .footer-brand img { width: 112px !important; }
+.footer .footer-brand-block p { margin: 9px 0 0 !important; color: #66736c !important; font-size: 10px !important; line-height: 1.65 !important; }
+.footer .dot-footer { display: flex !important; align-items: center !important; justify-content: center !important; gap: 7px !important; min-height: 28px !important; opacity: .68 !important; transition: opacity .2s ease, transform .2s ease !important; }
+.footer .dot-footer:hover { opacity: 1 !important; transform: translateY(-1px) !important; }
+.footer .dot-footer > span { color: #7e8e86 !important; font: 700 10px/1 'Manrope', system-ui, sans-serif !important; letter-spacing: .16em !important; text-transform: uppercase !important; white-space: nowrap !important; }
+.footer .dot-footer > a { display: inline-flex !important; align-items: center !important; gap: 6px !important; color: #f4f1ed !important; transition: color .2s ease !important; }
+.footer .dot-footer > a:hover { color: #fff !important; }
+.footer .dot-footer > a::before { content: "" !important; display: block !important; width: 18px !important; height: 20px !important; flex: 0 0 18px !important; background: url('/dot-logo.svg') center / contain no-repeat !important; }
+.footer .dot-footer > a > strong { display: inline-block !important; color: #f4f1ed !important; font-family: 'Space Grotesk', system-ui, sans-serif !important; font-size: 15px !important; font-weight: 800 !important; letter-spacing: -.055em !important; line-height: 1 !important; }
+.footer .dot-footer > a > strong b { color: #20B2AA !important; font-weight: 800 !important; }
+.footer .footer-links { display: flex !important; justify-content: flex-end !important; align-items: center !important; gap: 20px !important; color: #65736c !important; font: 9px/1 'DM Mono', monospace !important; text-transform: uppercase !important; letter-spacing: .1em !important; }
+.footer .footer-links a { display: inline-flex !important; align-items: center !important; gap: 4px !important; transition: color .2s ease, transform .2s ease !important; }
+.footer .footer-links a:hover { color: #f4f1ed !important; transform: translateY(-1px) !important; }
 @media (max-width: 760px) {
-  .footer.footer-dot-canonical {
-    grid-template-columns: 1fr !important;
-    justify-items: center !important;
-    text-align: center !important;
-    gap: 20px !important;
-    margin: 0 20px !important;
-    padding: 28px 0 24px !important;
-  }
-
-  .footer.footer-dot-canonical .footer-brand-block {
-    text-align: center !important;
-  }
-
-  .footer.footer-dot-canonical .footer-links {
-    justify-content: center !important;
-    flex-wrap: wrap !important;
-  }
+  .footer { grid-template-columns: 1fr !important; justify-items: center !important; text-align: center !important; gap: 20px !important; margin: 0 20px !important; padding: 28px 0 24px !important; }
+  .footer .footer-brand-block { text-align: center !important; }
+  .footer .footer-links { justify-content: center !important; flex-wrap: wrap !important; }
 }
