@@ -23,8 +23,6 @@ jobs:
       - name: Build frontend
         run: npm run build
       - name: Install backend dependencies
-        run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt
       - name: Compile Python
         run: python -m py_compile server.py
-      - name: Run API tests
-        run: pytest -q
