@@ -7,3 +7,15 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: openai-compatible
+      - key: AI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: AI_MODEL
+        value: gpt-4o-mini
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
