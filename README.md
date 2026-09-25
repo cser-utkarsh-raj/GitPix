@@ -13,7 +13,7 @@ GitPix helps developers design a polished GitHub profile README without writing 
 - Copy Markdown or download `README.md`.
 - Local autosave so unfinished designs survive refreshes.
 - Responsive editor for desktop and mobile.
-- FastAPI proxy for GitHub API calls with validation, caching, rate limiting and security headers.
+- FastAPI proxy for GitHub API calls with validation, five-minute caching, rate limiting and security headers.
 
 ## Stack
 
@@ -23,20 +23,37 @@ GitPix helps developers design a polished GitHub profile README without writing 
 
 ## Local development
 
+Install the dependencies:
+
 ```bash
 npm install
+pip install -r requirements.txt
+```
+
+Start the API in one terminal:
+
+```bash
+uvicorn server:app --reload --port 8000
+```
+
+Start the frontend in another:
+
+```bash
 npm run dev
 ```
 
-The Vite development server runs on `http://localhost:5173`.
+Open `http://localhost:5173`. Vite proxies `/api` requests to the local FastAPI service.
 
-For the production service:
+## Production
 
 ```bash
+npm install
 npm run build
 pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8000
 ```
+
+`render.yaml` contains a single-service deployment configuration that builds the React app and serves the resulting `dist` directory through FastAPI.
 
 ## Product principles
 
