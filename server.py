@@ -19,10 +19,10 @@ _hits = defaultdict(list)
 _oauth_states = {}
 USERNAME_RE = re.compile(r'^[A-Za-z0-9-]{1,39}$')
 
-AI_API_KEY = os.getenv('AI_API_KEY', '').strip()
-AI_PROVIDER = os.getenv('AI_PROVIDER', 'openai-compatible').lower()
-AI_BASE_URL = os.getenv('AI_BASE_URL', 'https://api.openai.com/v1').rstrip('/')
-AI_MODEL = os.getenv('AI_MODEL', 'gpt-4o-mini')
+AI_API_KEY = os.getenv('NVDIA_AI_KEY', '').strip() or os.getenv('AI_API_KEY', '').strip()
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'nvidia').lower()
+AI_BASE_URL = os.getenv('AI_BASE_URL', 'https://integrate.api.nvidia.com/v1').rstrip('/')
+AI_MODEL = os.getenv('AI_MODEL', 'openai/gpt-oss-20b')
 GITHUB_CLIENT_ID = os.getenv('GITHUB_CLIENT_ID', '').strip()
 GITHUB_CLIENT_SECRET = os.getenv('GITHUB_CLIENT_SECRET', '').strip()
 
@@ -92,32 +92,9 @@ async def fetch_github_profile(username: str):
         if lang and lang.lower() not in seen:
             seen.add(lang.lower()); languages.append(lang)
         total_stars += int(repo.get('stargazers_count') or 0)
-        projects.append({
-            'title': repo.get('name', ''), 'name': repo.get('name', ''),
-            'description': repo.get('description') or 'Open-source project',
-            'repoUrl': repo.get('html_url', ''), 'stars': repo.get('stargazers_count', 0),
-            'forks': repo.get('forks_count', 0), 'language': lang or ''
-        })
+        projects.append({'title': repo.get('name', ''), 'name': repo.get('name', ''), 'description': repo.get('description') or 'Open-source project', 'repoUrl': repo.get('html_url', ''), 'stars': repo.get('stargazers_count', 0), 'forks': repo.get('forks_count', 0), 'language': lang or ''})
 
-    data = {
-        'profile': {
-            'username': user.get('login', ''),
-            'displayName': user.get('name') or user.get('login', ''),
-            'avatarUrl': user.get('avatar_url', ''),
-            'location': user.get('location') or '',
-            'company': user.get('company') or '',
-            'website': user.get('blog') or '',
-            'twitter': user.get('twitter_username') or '',
-            'tagline': user.get('bio') or 'Building useful things and shipping them.',
-            'aboutBio': user.get('bio') or 'I enjoy turning ideas into clean, useful software.',
-            'publicRepos': user.get('public_repos', 0),
-            'followers': user.get('followers', 0),
-            'following': user.get('following', 0),
-            'totalStars': total_stars,
-        },
-        'projects': projects,
-        'languages': languages,
-    }
+    data = {'profile': {'username': user.get('login', ''), 'displayName': user.get('name') or user.get('login', ''), 'avatarUrl': user.get('avatar_url', ''), 'location': user.get('location') or '', 'company': user.get('company') or '', 'website': user.get('blog') or '', 'twitter': user.get('twitter_username') or '', 'tagline': user.get('bio') or 'Building useful things and shipping them.', 'aboutBio': user.get('bio') or 'I enjoy turning ideas into clean, useful software.', 'publicRepos': user.get('public_repos', 0), 'followers': user.get('followers', 0), 'following': user.get('following', 0), 'totalStars': total_stars}, 'projects': projects, 'languages': languages}
     _cache[username.lower()] = {'at': monotonic(), 'data': data}
     return data
 
@@ -128,17 +105,23 @@ async def github_user(username: str, request: Request):
     return await fetch_github_profile(username)
 
 
+async def github_token_user(token: str):
+    headers = {'Accept': 'application/vnd.github+json', 'Authorization': f'Bearer {token}', 'User-Agent': 'GitPix/2.0'}
+    async with httpx.AsyncClient(timeout=8) as client:
+        res = await client.get('https://api.github.com/user', headers=headers)
+    if not res.is_success:
+        return None
+    return res.json()
+
+
 @app.get('/api/github/connection')
 async def github_connection(request: Request):
     token = request.cookies.get('gitpix_github_token')
     if not token:
         return {'connected': False}
-    headers = {'Accept': 'application/vnd.github+json', 'Authorization': f'Bearer {token}', 'User-Agent': 'GitPix/2.0'}
-    async with httpx.AsyncClient(timeout=8) as client:
-        res = await client.get('https://api.github.com/user', headers=headers)
-    if not res.is_success:
+    user = await github_token_user(token)
+    if not user:
         return {'connected': False}
-    user = res.json()
     return {'connected': True, 'username': user.get('login'), 'name': user.get('name') or user.get('login')}
 
 
@@ -149,7 +132,10 @@ async def github_oauth_start(request: Request):
     state = token_urlsafe(32)
     _oauth_states[state] = monotonic()
     callback = str(request.base_url).rstrip('/') + '/api/github/oauth/callback'
-    response = RedirectResponse(f'https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&redirect_uri={callback}&scope=public_repo&state={state}')
+    # GitHub's Contents API requires the classic OAuth `repo` scope for writes.
+    # GitHub presents this requested permission to the user on its consent screen.
+    scope = 'repo read:user'
+    response = RedirectResponse(f'https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&redirect_uri={callback}&scope={scope.replace(" ", "%20")}&state={state}')
     response.set_cookie('gitpix_oauth_state', state, max_age=600, httponly=True, secure=request.url.scheme == 'https', samesite='lax')
     return response
 
@@ -160,9 +146,7 @@ async def github_oauth_callback(request: Request, code: str = '', state: str = '
     if not code or not state or not expected or state != expected or state not in _oauth_states or monotonic() - _oauth_states.pop(state) > 600:
         raise HTTPException(400, 'Invalid or expired GitHub OAuth state.')
     async with httpx.AsyncClient(timeout=10) as client:
-        token_res = await client.post('https://github.com/login/oauth/access_token', data={
-            'client_id': GITHUB_CLIENT_ID, 'client_secret': GITHUB_CLIENT_SECRET, 'code': code, 'redirect_uri': str(request.base_url).rstrip('/') + '/api/github/oauth/callback', 'state': state
-        }, headers={'Accept': 'application/json', 'User-Agent': 'GitPix/2.0'})
+        token_res = await client.post('https://github.com/login/oauth/access_token', data={'client_id': GITHUB_CLIENT_ID, 'client_secret': GITHUB_CLIENT_SECRET, 'code': code, 'redirect_uri': str(request.base_url).rstrip('/') + '/api/github/oauth/callback', 'state': state}, headers={'Accept': 'application/json', 'User-Agent': 'GitPix/2.0'})
     if not token_res.is_success or not token_res.json().get('access_token'):
         raise HTTPException(502, 'GitHub authorization failed.')
     token = token_res.json()['access_token']
@@ -174,7 +158,9 @@ async def github_oauth_callback(request: Request, code: str = '', state: str = '
 
 @app.post('/api/github/disconnect')
 async def github_disconnect(response: Request):
-    return {'connected': False}
+    result = JSONResponse({'connected': False})
+    result.delete_cookie('gitpix_github_token')
+    return result
 
 
 @app.post('/api/github/publish')
@@ -195,7 +181,7 @@ async def github_publish(payload: PublishRequest, request: Request):
         if repo.status_code == 404:
             created = await client.post('https://api.github.com/user/repos', headers=headers, json={'name': username, 'private': False, 'description': 'GitHub profile README published with GitPix', 'auto_init': True})
             if not created.is_success:
-                raise HTTPException(502, 'Could not create the profile repository. Check your GitHub permissions.')
+                raise HTTPException(502, 'Could not create the profile repository. Check the permissions you granted GitPix and your GitHub repository-creation settings.')
         elif not repo.is_success:
             raise HTTPException(502, 'Could not access the profile repository.')
         file_url = f'{repo_url}/contents/README.md'
@@ -207,7 +193,7 @@ async def github_publish(payload: PublishRequest, request: Request):
             raise HTTPException(502, 'Could not inspect the existing profile README.')
         pushed = await client.put(file_url, headers=headers, json=body)
         if not pushed.is_success:
-            raise HTTPException(502, 'GitHub rejected the README update.')
+            raise HTTPException(502, 'GitHub rejected the README update. Make sure GitPix has the required repository permission.')
     return {'ok': True, 'username': username, 'url': f'https://github.com/{username}#readme'}
 
 
@@ -223,7 +209,7 @@ def clean_ai_markdown(text: str) -> str:
 async def ai_generate(payload: AIGenerateRequest, request: Request):
     rate_limit(request, 'ai', 12)
     if not AI_API_KEY:
-        raise HTTPException(503, 'AI generation is not configured. Add AI_API_KEY to the server environment.')
+        raise HTTPException(503, 'AI generation is temporarily unavailable. Please try again later.')
     system = "You are GitPix, a meticulous GitHub Profile README designer. Generate ONLY the final Markdown README, never a preamble, never a code fence, and never invent facts. Use the supplied public GitHub data as the source of truth. Preserve the requested visual style through headings, HTML alignment, badges, tables, spacing, and tasteful image services. Never include secrets or private data. Keep external image URLs stable and accessible."
     prompt = f"Create a polished GitHub profile README in the {payload.template} visual system.\n\nGitHub data:\n{payload.profile}\n\nAdditional user instructions:\n{payload.instructions or 'Use your judgment, but keep it concise and distinctive.'}"
     try:
