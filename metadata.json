@@ -1,6 +1,5 @@
 {
   "name": "GitPix",
-  "description": "GitPix - Futuristic Samurai AI GitHub Profile Generator & Direct Repository Deployment Engine.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "description": "GitHub Profile README designer with multiple visual templates, public profile import, live preview and Markdown export.",
+  "requestFramePermissions": []
 }
