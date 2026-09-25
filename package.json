@@ -1,9 +1,9 @@
 {
   "name": "gitpix",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "GitHub Profile README designer with multiple visual templates.",
+  "description": "GitHub Profile README designer with distinct visual systems, GitHub import, AI generation and optional publishing.",
   "scripts": {"dev":"vite","build":"vite build","preview":"vite preview"},
   "dependencies": {"@vitejs/plugin-react":"^5.0.4","lucide-react":"^0.546.0","react":"^19.0.1","react-dom":"^19.0.1","react-markdown":"^10.1.0","rehype-raw":"^7.0.0","remark-gfm":"^4.0.1","vite":"^6.2.3"}
 }
