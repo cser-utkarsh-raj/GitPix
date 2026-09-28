@@ -6,23 +6,17 @@ GitPix is a GitHub Profile README designer built around six genuinely different 
 
 ## The workflow
 
-```text
-GitHub username
-      ↓
-Public profile + repositories
-      ↓
-Choose a visual system
-      ↓
-Customize profile / stack / modules
-      ↓
-┌──────────────────────────────┐
-│ Template renderer OR AI      │
-└──────────────┬───────────────┘
-               ↓
-        Live README preview
-               ↓
-      Copy · Download · Publish
+```mermaid
+flowchart LR
+    GH["GitHub username"] --> IMPORT["Public profile + repositories"]
+    IMPORT --> STYLE["Choose a visual system"]
+    STYLE --> EDIT["Customize profile / stack / modules"]
+    EDIT --> RENDER["Template renderer OR AI"]
+    RENDER --> PREVIEW["Live README preview"]
+    PREVIEW --> OUT["Copy · Download · Publish"]
 ```
+
+**How to read it:** GitPix turns public GitHub data into an editable visual system, renders it into Markdown, and lets the user take the finished README wherever they need it.
 
 ## Six visual systems
 
@@ -57,13 +51,20 @@ Imported data includes:
 
 GitPix can publish `README.md` to the authenticated user's profile repository using GitHub OAuth.
 
-The publishing flow:
+```mermaid
+sequenceDiagram
+    actor User
+    participant GitPix
+    participant GitHub
 
-1. User connects GitHub.
-2. GitHub authorizes the `public_repo` scope.
-3. GitPix stores the OAuth token in an **HttpOnly** cookie rather than browser storage.
-4. GitPix creates `<username>/<username>` if it does not exist.
-5. GitPix creates or updates `README.md`.
+    User->>GitPix: Connect GitHub
+    GitPix->>GitHub: OAuth authorization
+    GitHub-->>GitPix: OAuth token
+    GitPix->>GitPix: Store token in HttpOnly cookie
+    GitPix->>GitHub: Create/update profile README
+    GitHub-->>GitPix: Published README
+    GitPix-->>User: Publication result
+```
 
 Publishing is optional; the core designer works without an account or GitHub write permission.
 
@@ -71,36 +72,31 @@ Publishing is optional; the core designer works without an account or GitHub wri
 
 AI generation happens server-side so the API key is never shipped to the browser.
 
-GitPix supports:
+```mermaid
+flowchart TD
+    DATA["Imported public GitHub data"] --> PROMPT["Provider adapter + visual-system instructions"]
+    STYLE["Selected visual system"] --> PROMPT
+    PROMPT --> MODEL["AI model"]
+    MODEL --> MD["Markdown only"]
+    MD --> PREVIEW["Live preview"]
+```
 
-- **OpenAI-compatible providers** via `AI_BASE_URL`
-- **Gemini** via `AI_PROVIDER=gemini`
-
-The model receives the imported public GitHub data plus the selected visual system and is instructed to produce only Markdown without inventing facts.
+GitPix supports OpenAI-compatible providers and Gemini. The model receives the imported public GitHub data plus the selected visual system and is instructed to produce only Markdown without inventing facts.
 
 ### Environment variables
 
 ```env
-# AI
 AI_API_KEY=your-provider-key
 AI_PROVIDER=openai-compatible
 AI_BASE_URL=https://api.openai.com/v1
 AI_MODEL=gpt-4o-mini
-
-# Optional GitHub publishing
 GITHUB_CLIENT_ID=your-oauth-client-id
 GITHUB_CLIENT_SECRET=your-oauth-client-secret
 ```
 
 For Mistral or another OpenAI-compatible provider, change `AI_BASE_URL` and `AI_MODEL` while keeping `AI_PROVIDER=openai-compatible`.
 
-For Gemini, use:
-
-```env
-AI_PROVIDER=gemini
-AI_MODEL=gemini-2.5-flash
-AI_API_KEY=your-gemini-key
-```
+For Gemini, use `AI_PROVIDER=gemini`.
 
 ## Stack
 
@@ -112,37 +108,14 @@ AI_API_KEY=your-gemini-key
 
 ## Local development
 
-Install dependencies:
-
 ```bash
 npm install
 pip install -r requirements.txt
-```
-
-Start FastAPI:
-
-```bash
 uvicorn server:app --reload --port 8000
-```
-
-Start Vite in another terminal:
-
-```bash
 npm run dev
 ```
 
 Open `http://localhost:5173`.
-
-## Production build
-
-```bash
-npm install
-npm run build
-pip install -r requirements.txt
-uvicorn server:app --host 0.0.0.0 --port 8000
-```
-
-`render.yaml` builds the React application and serves the generated `dist` directory through FastAPI.
 
 ## Production notes
 
